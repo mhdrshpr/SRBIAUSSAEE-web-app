@@ -1,0 +1,60 @@
+# Environment configuration
+.env
+.env.backup
+.env.*.local
+!.env.example
+
+# Storage, logs, and caches
+storage/logs/*
+!storage/logs/.gitkeep
+storage/cache/*
+!storage/cache/.gitkeep
+storage/migrate/*
+!storage/migrate/.gitkeep
+storage/certificates/*
+!storage/certificates/.htaccess
+!storage/certificates/.gitkeep
+*.log
+
+# Installation lock
+install/install.lock
+
+# User uploads and dynamic assets
+assets/board/*
+!assets/board/README.txt
+!assets/board/.gitkeep
+assets/cert-template/*
+!assets/cert-template/README.txt
+!assets/cert-template/.gitkeep
+
+# Temporary / backup files
+*.bak
+*.backup
+*.old
+*.tmp
+*.zip
+*.tar.gz
+*.rar
+*.7z
+diag.php
+promote.php
+
+# Python & testing cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

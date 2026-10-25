@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /storage/
+Disallow: /install/
+Disallow: /tests/
+Disallow: /api
+Disallow: /*?api=*
+Disallow: /*?action=*
+Allow: /
+Allow: /assets/
+Allow: /app.html
+
+Sitemap: https://panel.ssaee.ir/sitemap.xml

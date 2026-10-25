@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="سامانه هوشمند و جامع انجمن علمی مهندسی برق — دسترسی به خدمات دانشجویی، استعلام گواهینامه‌ها، ثبت‌نام کارگاه‌ها و گروه‌های درسی.">
+<meta property="og:title" content="SSAEE Smart Panel | پنل هوشمند انجمن علمی مهندسی برق">
+<meta property="og:description" content="سامانه هوشمند و جامع انجمن علمی مهندسی برق — دسترسی به خدمات دانشجویی، استعلام گواهینامه‌ها، ثبت‌نام کارگاه‌ها و گروه‌های درسی.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<title>SSAEE Smart Panel</title>
+<link rel='icon' type='image/svg+xml' href='assets/favicon.svg'>
+    <link rel='shortcut icon' href='assets/favicon.ico'>
+<link rel='stylesheet' href='assets/app.css?v=10'>
+<script src="https://telegram.org/js/telegram-web-app.js" defer onerror="window.__TG_LIB_OK=false"></script>
+<!-- lucide vendored locally (v0.462.0, includes brand icons); unpkg@latest dropped brand icons and was unreliable -->
+<script src="assets/vendor/lucide.min.js" onerror="window.__LUCIDE_OK=false"></script>
+<script>if(typeof lucide==="undefined"){var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js";s.onload=function(){if(window.refreshIconsFn)refreshIconsFn()};document.head.appendChild(s)}</script>
+
+</head>
+<body>
+
+<div id="splash" class="splash">
+  <img class="splash-logo-img" width="105" height="46" style="width: 105px; max-width: 110px; height: auto; max-height: 48px; object-fit: contain; display: block; margin: 0 auto;" data-logo-dark="assets/logo.png" data-logo-light="assets/logo-black.png" src="assets/logo.png" alt="SSAEE">
+  <div class="splash-spinner"></div>
+  <div id="splashError" class="splash-error hidden">
+    <i data-lucide="alert-triangle"></i>
+    <b>خطا در بارگذاری پنل</b>
+    <p id="splashErrorMsg"></p>
+    <button id="splashRetry" class="btn btn-primary" type="button">تلاش مجدد</button>
+  </div>
+</div>
+<script>
+  (function(){
+    var isLight = localStorage.getItem('ssaee_theme') === 'light';
+    var splashImg = document.querySelector('.splash-logo-img');
+    if (splashImg && isLight) {
+      splashImg.src = splashImg.getAttribute('data-logo-light') || 'assets/logo-black.png';
+    }
+  })();
+</script>
+
+<!-- ==================== AUTH (overlay — optional) ==================== -->
+<div id="authView" class="auth-wrap hidden">
+  <div class="auth-card">
+    <button id="authClose" class="icon-btn auth-close" type="button" aria-label="بستن"><i data-lucide="x"></i></button>
+    <div class="auth-logo">SSAEE</div>
+    <div class="auth-sub">ورود / ثبت‌نام با شماره موبایل</div>
+    <p class="muted" style="text-align:center;margin-bottom:16px;font-size:.78rem">
+      با ساخت حساب، پروفایل، گواهینامه‌ها و امتیازهای شما همیشه در دسترس خواهد بود
+    </p>
+
+    <div class="auth-tabs">
+      <button class="tab-btn active" data-authtab="login" type="button">ورود</button>
+      <button class="tab-btn" data-authtab="register" type="button">ثبت‌نام</button>
+    </div>
+
+    <form id="loginForm" class="form">
+      <input type="hidden" name="website" value="">
+      <label>شماره موبایل<input name="phone" inputmode="tel" required placeholder="۰۹xxxxxxxxx"></label>
+      <label>رمز عبور<input name="password" type="password" required></label>
+      <button class="btn btn-primary" type="submit">ورود</button>
+      <button class="btn btn-tg" type="button" id="tgQuickLogin"><i data-lucide="send"></i> ورود سریع با تلگرام (اشتراک شماره با ربات)</button>
+      <button class="btn-link" type="button" id="forgotBtn">فراموشی رمز عبور</button>
+    </form>
+
+    <form id="registerForm" class="form hidden">
+      <input type="hidden" name="website" value="">
+      <div class="notice-box">
+        <i data-lucide="shield-check"></i>
+        <span>اطلاعاتی که وارد می‌کنید (نام، کد ملی و شماره دانشجویی) <b>صرفاً برای استعلام گواهینامه‌ها و امتیازها</b> استفاده می‌شود و به‌صورت ایمن و رمزنگاری‌شده ذخیره می‌گردد.</span>
+      </div>
+      <div class="form-row">
+        <label>نام<input name="first_name" data-name="fa" required></label>
+        <label>نام خانوادگی<input name="last_name" data-name="fa" required></label>
+      </div>
+      <label>شماره موبایل<input name="phone" inputmode="tel" required placeholder="۰۹xxxxxxxxx"></label>
+      <label>کد ملی<input name="national_id" inputmode="numeric" maxlength="10" required></label>
+      <label>شماره دانشجویی<input name="student_id" inputmode="numeric" required></label>
+      <label>رمز عبور (حداقل ۸ کاراکتر، حرف + عدد)<input name="password" type="password" required minlength="8"></label>
+      <button class="btn btn-primary" type="submit">ایجاد حساب</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="appView">
+
+  <header class="header">
+    <button id="logoBtn" class="header-logo-btn" data-goto="home" type="button" aria-label="صفحه اصلی">
+      <img data-logo-dark="assets/logo.png" data-logo-light="assets/logo-black.png" src="assets/logo.png" alt="SSAEE" onerror="this.remove()">
+    </button>
+    <div class="header-actions">
+      <button id="themeToggle" class="icon-btn" type="button" aria-label="تغییر تم"><i data-lucide="moon"></i></button>
+      <button class="icon-btn" data-modal="modalAbout" type="button" aria-label="درباره انجمن"><i data-lucide="info"></i></button>
+      <button class="icon-btn" data-modal="modalHelp" type="button" aria-label="راهنما"><i data-lucide="circle-help"></i></button>
+      <a id="supportBtn" class="icon-btn" href="https://t.me/saee_admin" target="_blank" rel="noopener" aria-label="پشتیبانی"><i data-lucide="life-buoy"></i></a>
+      <button id="logoutBtn" class="icon-btn hidden" type="button" aria-label="خروج از حساب"><i data-lucide="log-out"></i></button>
+      <button id="authBtn" class="icon-btn auth-cta" type="button" aria-label="ورود / ثبت‌نام"><i data-lucide="log-in"></i></button>
+    </div>
+  </header>
+
+  <div id="annBar" class="ann-bar hidden"></div>
+
+  <main id="app">
+
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div class="hero-glow"></div>
+        <div id="userBadge" class="user-badge home-chip hidden"></div>
+      </div>
+
+      <div id="bannersBox" class="banners hidden"></div>
+      <div id="bannersDots" class="banners-dots hidden"></div>
+
+      <div class="quick-grid">
+        <button class="qcard" data-goto="members" type="button"><i data-lucide="id-card" class="qi"></i><i data-lucide="id-card" class="qi-bg"></i><span>عضویت در انجمن</span></button>
+        <button class="qcard" data-goto="workshops" type="button"><i data-lucide="bot" class="qi"></i><i data-lucide="bot" class="qi-bg"></i><span>کارگاه‌ها و دوره‌ها</span></button>
+        <button class="qcard" data-goto="classes" type="button"><i data-lucide="book-copy" class="qi"></i><i data-lucide="book-copy" class="qi-bg"></i><span>گروه‌های درسی ترم جاری</span></button>
+        <button class="qcard" data-goto="certificates" type="button"><i data-lucide="award" class="qi"></i><i data-lucide="award" class="qi-bg"></i><span>استعلام گواهینامه</span></button>
+        <button class="qcard" data-modal="modalActivities" type="button"><i data-lucide="activity" class="qi"></i><i data-lucide="activity" class="qi-bg"></i><span>گزارش فعالیت‌ها</span></button>
+        <button class="qcard" data-modal="modalMemberStats" type="button"><i data-lucide="bar-chart-3" class="qi"></i><i data-lucide="bar-chart-3" class="qi-bg"></i><span>آمار اعضا</span></button>
+        <button class="qcard" data-goto="collab" type="button"><i data-lucide="handshake" class="qi"></i><i data-lucide="handshake" class="qi-bg"></i><span>همکاری با ما</span></button>
+        <button class="qcard" data-goto="contact" type="button"><i data-lucide="message-circle" class="qi"></i><i data-lucide="message-circle" class="qi-bg"></i><span>انتقادات و پیشنهادات</span></button>
+        <button class="qcard" data-goto="profile" type="button"><i data-lucide="user" class="qi"></i><i data-lucide="user" class="qi-bg"></i><span>پروفایل من</span></button>
+        <button class="qcard qcard-gold" data-goto="sponsor" type="button"><i data-lucide="gem" class="qi"></i><i data-lucide="gem" class="qi-bg"></i><span>اسپانسرشیپ 💎</span></button>
+      </div>
+    </section>
+
+    <section class="view" id="view-members">
+      <h2 class="view-title"><i data-lucide="id-card"></i> عضویت در انجمن</h2>
+
+      <div id="memberStatus" class="status-box neutral">
+        <i data-lucide="loader-circle"></i>
+        <span>در حال بررسی وضعیت عضویت…</span>
+      </div>
+
+      <div class="card" id="joinCard">
+        <h3><i data-lucide="user-plus"></i> درخواست عضویت</h3>
+        <form id="memberReqForm" class="form" data-prefill="1">
+          <input type="hidden" name="website" value="">
+          <label>نام و نام خانوادگی<input name="Name" data-pf="full_name" data-name="fa" required minlength="3"></label>
+          <label>کد ملی<input name="NationalID" inputmode="numeric" maxlength="10" data-pf="national_id" required></label>
+          <label>شماره دانشجویی<input name="StudentID" inputmode="numeric" data-pf="student_id" required></label>
+          <label>شماره موبایل<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <label>گرایش<input name="Branch" placeholder="اختیاری"></label>
+          <label>معرف<input name="Introducer" data-name="fa" placeholder="اختیاری"></label>
+          <button type="submit" class="btn btn-primary">ثبت درخواست</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="view" id="view-workshops">
+      <h2 class="view-title"><i data-lucide="bot"></i> کارگاه‌ها و دوره‌ها</h2>
+      <div id="wsCards" class="ws-list"></div>
+    <button class="btn btn-outline" data-goto="classes" type="button" style="width:100%;margin-bottom:14px"><i data-lucide="book-copy"></i> گروه‌های درسی ترم جاری</button>
+
+      <div class="card collab-acc">
+        <button class="collab-acc-head" type="button" data-acc="acc-ws">
+          <i data-lucide="graduation-cap"></i>
+          <span>درخواست برگزاری کارگاه</span>
+          <i data-lucide="chevron-down" class="acc-chev"></i>
+        </button>
+        <div class="collab-acc-body" id="acc-ws">
+          <form id="workshopReqForm" data-prefill="1" class="form">
+            <input type="hidden" name="website" value="">
+            <label>عنوان دوره<input name="Course" required></label>
+            <label>مدرس پیشنهادی<input name="Teacher" required></label>
+            <label>تاریخ (شمسی)<input name="Date" required placeholder="۱۴۰۴/۰۷/۱۵"></label>
+            <label>ساعت<input name="Time" required placeholder="۱۸:۰۰"></label>
+            <label class="has-tip">شماره موبایل<span class="tip" role="tooltip">شماره تماس شما تنها برای اطلاع‌رسانی برگزاری این کارگاه استفاده خواهد شد.</span><input name="Phone" inputmode="tel" data-pf="phone" required></label>
+            <button type="submit" class="btn btn-primary">ثبت درخواست</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card collab-acc">
+        <button class="collab-acc-head" type="button" data-acc="acc-cls">
+          <i data-lucide="book-open"></i>
+          <span>درخواست برگزاری کلاس حل تمرین</span>
+          <i data-lucide="chevron-down" class="acc-chev"></i>
+        </button>
+        <div class="collab-acc-body" id="acc-cls">
+          <form id="classReqForm" data-prefill="1" class="form">
+            <input type="hidden" name="website" value="">
+            <label>عنوان درس<input name="Course" required></label>
+            <label>استاد<input name="Teacher" required></label>
+            <label>تاریخ (شمسی)<input name="Date" required placeholder="۱۴۰۴/۰۷/۱۵"></label>
+            <label>ساعت<input name="Time" required placeholder="۱۸:۰۰"></label>
+            <label class="has-tip">شماره موبایل<span class="tip" role="tooltip">شماره تماس شما تنها برای اطلاع‌رسانی برگزاری این کلاس استفاده خواهد شد.</span><input name="Phone" inputmode="tel" data-pf="phone" required></label>
+            <button type="submit" class="btn btn-primary">ثبت درخواست</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-certificates">
+      <div class="cls-page-head">
+        <div>
+          <h1 class="cls-page-title"><i data-lucide="award"></i> استعلام گواهینامه</h1>
+          <p class="cls-page-sub">اعتبار گواهینامه‌های صادره انجمن را با کد آن‌ها استعلام کنید</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><i data-lucide="search"></i> استعلام با کد گواهینامه
+          <span class="has-tip cert-help-wrap">
+            <button class="icon-btn cert-help-tip" data-modal="modalCertHelp" type="button" aria-label="راهنمای جست‌وجوی گواهی‌نامه"><i data-lucide="circle-help"></i></button>
+            <span class="tip">راهنمای جست‌وجو: کد کامل با خط‌تیره، کد کامل بدون خط‌تیره، یا فقط سریال. برای دیدن تصویر نمونه کلیک کنید.</span>
+          </span>
+        </h3>
+        <form id="certCheckForm" class="form form-inline">
+          <input name="id" required placeholder="کد کامل یا فقط ۴ تا ۶ رقم آخر — مثلاً 202509-12345">
+          <button type="submit" class="btn btn-primary">استعلام</button>
+        </form>
+        <div id="certResult" class="hidden"></div>
+      </div>
+
+      <div class="card">
+        <h3><i data-lucide="folder-check"></i> گواهینامه‌های من</h3>
+        <p class="muted">گواهینامه‌های ثبت‌شده برای پروفایل شما — برای نمایش، دکمه زیر را بزنید.</p>
+        <button id="myCertsBtn" class="btn btn-outline" type="button"><i data-lucide="eye"></i> نمایش گواهینامه‌های من</button>
+        <div id="myCertsList" class="cert-list hidden"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-myworkshops">
+      <div class="cls-page-head">
+        <button class="icon-btn" data-goto="profile" type="button" aria-label="بازگشت"><i data-lucide="arrow-right"></i></button>
+        <div>
+          <h1 class="cls-page-title"><i data-lucide="bot"></i> کارگاه‌های من</h1>
+          <p class="cls-page-sub">لیست کامل ثبت‌نام‌های شما در کارگاه‌ها</p>
+        </div>
+      </div>
+      <div class="card"><div id="myWorkshopsFull" class="mini-list"><p class="muted">در حال بارگذاری…</p></div></div>
+    </section>
+
+    <section class="view" id="view-profile">
+      <h2 class="view-title"><i data-lucide="user"></i> پروفایل من</h2>
+      <div id="profileBox" class="card"></div>
+
+      <div id="tgConnectCard" class="card tg-connect hidden">
+        <h3><i data-lucide="send"></i> اتصال با تلگرام</h3>
+        <p class="muted">با اتصال حساب، این مزایا فعال می‌شود:</p>
+        <ul class="benefits">
+          <li><i data-lucide="megaphone"></i> دریافت اطلاعیه‌های اعضا</li>
+          <li><i data-lucide="award"></i> اطلاعیه صدور گواهینامه برای شما</li>
+          <li><i data-lucide="rocket"></i> اطلاعیه آغاز ثبت‌نام کارگاه جدید</li>
+          <li><i data-lucide="link"></i> ارسال خودکار لینک کارگاه بعد از ثبت‌نام</li>
+        </ul>
+        <button id="tgConnectBtn" class="btn btn-primary" type="button">اتصال حساب با تلگرام</button>
+      </div>
+
+      <div class="card">
+        <h3><i data-lucide="bot"></i> کارگاه‌های من</h3>
+        <div id="myWorkshops" class="mini-list"><p class="muted">—</p></div>
+      </div>
+      <div class="card">
+        <h3><i data-lucide="award"></i> گواهینامه‌های من</h3>
+        <div id="myCertsMini" class="mini-list"><p class="muted">—</p></div>
+      </div>
+
+      <div class="card danger-zone hidden" id="privacyCard">
+        <h3><i data-lucide="shield-alert"></i> حریم خصوصی و حذف حساب</h3>
+        <p class="muted" style="font-size:.78rem;line-height:1.9">می‌توانید حساب کاربری خود را از وب‌سایت حذف کنید. <b>گواهینامه‌ها، سوابق ثبت‌نام و اطلاعات عضویت شما حذف نمی‌شوند.</b></p>
+        <button id="accountDeleteBtn" class="btn btn-danger-outline" type="button">
+          <i data-lucide="trash-2"></i> درخواست حذف حساب کاربری سایت
+        </button>
+      </div>
+    </section>
+
+    <section class="view" id="view-contact">
+      <h2 class="view-title"><i data-lucide="message-circle"></i> انتقادات و پیشنهادات</h2>
+      <div class="card">
+        <form id="feedbackForm" data-prefill="1" class="form">
+          <input type="hidden" name="website" value="">
+          <label>موضوع<input name="Subject" required></label>
+          <label>واحد<input name="Unit" placeholder="اختیاری"></label>
+          <label>متن پیام<textarea name="Note" rows="4" required></textarea></label>
+          <label>شماره موبایل<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <button class="btn btn-primary" type="submit">ارسال پیام</button>
+        </form>
+      </div>
+      <div class="card social-card">
+        <h3><i data-lucide="at-sign"></i> راه‌های ارتباطی</h3>
+        <a class="social-row" href="https://t.me/saee_admin" target="_blank" rel="noopener"><i data-lucide="send"></i> پشتیبانی تلگرام</a>
+        <a class="social-row" href="https://ble.ir/mhdr_shpr" target="_blank" rel="noopener"><i data-lucide="message-square"></i> بله (Ble)</a>
+      </div>
+    </section>
+
+    <section class="view" id="view-collab">
+    <h2 class="view-title"><i data-lucide="handshake"></i> همکاری با ما</h2>
+
+    <div class="collab-tabs">
+      <button class="tab-btn active" data-tab="tab-assoc" type="button">انجمن‌ها</button>
+      <button class="tab-btn" data-tab="tab-teachers" type="button">اساتید</button>
+      <button class="tab-btn" data-tab="tab-companies" type="button">شرکت‌ها</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-assoc">
+      <div class="card">
+        <h3><i data-lucide="building-2"></i> درخواست همکاری انجمن علمی</h3>
+        <form id="assocForm" data-prefill="1" class="form">
+          <input type="hidden" name="website" value="">
+          <input type="hidden" name="type" value="association">
+          <label>نام انجمن<input name="Name" required></label>
+          <label>دانشگاه<input name="University" required></label>
+          <label>رشته<input name="Field"></label>
+          <label>دوره<input name="Course"></label>
+          <label>شماره تماس<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <button class="btn btn-primary" type="submit">ارسال</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-teachers">
+      <div class="card">
+        <h3><i data-lucide="person-standing"></i> همکاری اساتید محترم</h3>
+        <form id="teacherForm" data-prefill="1" class="form">
+          <input type="hidden" name="website" value="">
+          <input type="hidden" name="type" value="teacher">
+          <label>نام و نام خانوادگی<input name="Name" data-pf="full_name" data-name="fa" required></label>
+          <label>دانشگاه<input name="University"></label>
+          <label>مرتبه علمی<input name="AcRank" placeholder="استادیار، دانشیار…"></label>
+          <label>درس/تخصص<input name="Course"></label>
+          <label>شماره تماس<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <button class="btn btn-primary" type="submit">ارسال</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-companies">
+      <div class="card">
+        <h3><i data-lucide="briefcase"></i> همکاری شرکت‌ها</h3>
+        <form id="companyForm" data-prefill="1" class="form">
+          <input type="hidden" name="website" value="">
+          <input type="hidden" name="type" value="company">
+          <label>نام شرکت<input name="Name" required></label>
+          <label>توضیحات<textarea name="Note" rows="3"></textarea></label>
+          <label>شماره تماس<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <button class="btn btn-primary" type="submit">ارسال</button>
+        </form>
+      </div>
+    </div>
+    </section>
+
+    <section class="view" id="view-classes">
+      <div class="cls-page-head">
+        <button class="icon-btn" data-goto="home" type="button" aria-label="بازگشت"><i data-lucide="arrow-right"></i></button>
+        <div>
+          <h1 class="cls-page-title"><i data-lucide="book-copy"></i> گروه‌های درسی ترم جاری</h1>
+          <p class="cls-page-sub">لینک گروه‌های تلگرامی درس‌ها — درس یا استاد خود را جستجو کنید</p>
+        </div>
+      </div>
+
+      <div class="cls-notice-card" style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.35);border-radius:12px;padding:12px 16px;margin:12px 0 16px;display:flex;align-items:flex-start;gap:10px;color:var(--text);font-size:0.83rem;line-height:1.8;">
+        <i data-lucide="info" style="color:#ffc107;flex-shrink:0;width:18px;height:18px;margin-top:2px;"></i>
+        <span>ثبت لینک گروه‌های درسی در ترم، خارج از مسئولیت‌های انجمن علمی می‌باشد و تنها در صورتی که لینک گروه‌ها در پنل قرار می‌گیرد که گروه آموزشی دانشکده، درخواست آن را به انجمن بدهد.</span>
+      </div>
+
+      <div class="search-box cls-search">
+        <i data-lucide="search"></i>
+        <input type="search" id="classSearch" placeholder="جستجوی نام درس یا استاد…" autocomplete="off">
+      </div>
+
+      <div id="classesList" class="cls-list">
+        <div class="loading">در حال بارگذاری…</div>
+      </div>
+
+      <div id="noResult" class="card hidden" style="text-align:center;padding:34px">
+        <i data-lucide="search-x" style="width:38px;height:38px;color:var(--accent)"></i>
+        <p class="muted" style="margin-top:10px">کلاسی با این مشخصات یافت نشد</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-sponsor">
+      <div class="cls-page-head">
+        <button class="icon-btn" data-goto="home" type="button" aria-label="بازگشت"><i data-lucide="arrow-right"></i></button>
+        <div>
+          <h1 class="cls-page-title"><i data-lucide="gem"></i> پیشنهاد اسپانسرشیپ</h1>
+          <p class="cls-page-sub">فرم زیر را تکمیل کنید؛ کارشناسان انجمن با شما تماس می‌گیرند</p>
+        </div>
+      </div>
+
+      <div class="card sponsor-card">
+        <form id="sponsorForm" class="form">
+          <input type="hidden" name="website" value="">
+          <input type="hidden" name="type" value="sponsor">
+          <input type="hidden" name="Type" id="spTypeValue" value="مالی">
+          <div class="form-row">
+            <label>نام برند<input name="Brand" required></label>
+            <label>نام رابط<input name="Interface" data-name="fa"></label>
+          </div>
+          <div class="sp-type-grid" id="spTypeGrid">
+            <button type="button" class="sp-type-chip is-active" data-sp-type="مالی">مالی</button>
+            <button type="button" class="sp-type-chip" data-sp-type="محصول">محصول</button>
+            <button type="button" class="sp-type-chip" data-sp-type="خدمات">خدمات</button>
+            <button type="button" class="sp-type-chip" data-sp-type="سایر">سایر</button>
+          </div>
+          <label id="spMoneyWrap">مبلغ (تومان)<input name="Money" id="spMoney" inputmode="numeric" autocomplete="off"></label>
+          <label id="spGoodsWrap" class="hidden">نام محصول / خدمات پیشنهادی<input name="Goods" placeholder="مثلاً: چاپ بنر، سرور، بسته آموزشی…"></label>
+          <label id="spServiceWrap" class="hidden">شرح خدمات پیشنهادی<textarea name="ServiceNote" rows="3" placeholder="خدماتی که ارائه می‌دهید را بنویسید…"></textarea></label>
+          <p id="spOtherHint" class="muted hidden" style="font-size:.76rem;line-height:1.9">نوع همکاری «سایر» را در کادر <b>توضیحات</b> پایین بنویسید.</p>
+          <label>ایمیل<input name="Email" type="email"></label>
+          <label>شماره تماس ضابط حقیقی<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+          <div class="form-row">
+            <label>تلگرام<input name="Telegram"></label>
+            <label>وب‌سایت<input name="Website" type="url"></label>
+          </div>
+          <label>توضیحات<textarea name="Note" rows="3"></textarea></label>
+          <button class="btn btn-primary" type="submit">ارسال پیشنهاد همکاری</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-goto="home" type="button"><i data-lucide="house"></i><span>خانه</span></button>
+    <button class="tab" data-goto="members" type="button"><i data-lucide="id-card"></i><span>عضویت</span></button>
+    <button class="tab" data-goto="workshops" type="button"><i data-lucide="bot"></i><span>کارگاه</span></button>
+    <button class="tab" data-goto="certificates" type="button"><i data-lucide="award"></i><span>گواهی</span></button>
+    <button class="tab" data-goto="profile" type="button"><i data-lucide="user"></i><span>پروفایل</span></button>
+  </nav>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<div class="modal-bg" id="modalWorkshop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="bot"></i> ثبت‌نام کارگاه</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <p id="wsModalTitle" style="margin-bottom:12px;font-size:1.05rem;font-weight:800;color:var(--accent);text-align:center;line-height:1.8"></p>
+    <form id="workshopRegForm" data-prefill="1" class="form">
+      <input type="hidden" name="website" value="">
+      <input type="hidden" name="WorkshopTag" value="">
+      <label>نام و نام خانوادگی<input name="FullName" data-pf="full_name" data-name="fa" required minlength="3"></label>
+      <label>شماره موبایل<input name="Phone" inputmode="tel" data-pf="phone" required></label>
+      <label class="check-row">
+        <input type="checkbox" id="notSru" name="not_sru" value="1">
+        <span>دانشجوی دانشگاه علوم تحقیقات نیستم</span>
+      </label>
+      <label id="lblStudent">شماره دانشجویی<input name="StudentID" inputmode="numeric" required></label>
+      <label id="lblUniversity" class="hidden">نام دانشگاه<input name="University" placeholder="مثلاً دانشگاه تهران"></label>
+      <label>رشته تحصیلی<input name="Field" required></label>
+      <button type="submit" class="btn btn-primary">ثبت‌نام در کارگاه</button>
+    </form>
+    <div id="wsRegResult" class="result hidden"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalActivities">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3><i data-lucide="activity"></i> گزارش فعالیت‌های انجام شده</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <div class="stats-row" id="activitiesStats"></div>
+    <div id="activitiesList" class="act-list"><div class="loading">در حال بارگذاری…</div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalMemberStats">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="users"></i> آمار اعضا</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <div id="memberStatsBox" class="stats-row"><div class="loading">در حال بارگذاری…</div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalCertHelp">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="search"></i> جست‌وجوی گواهی‌نامه</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <p class="muted" style="font-size:.82rem;line-height:2;margin-bottom:10px">
+      شمارهٔ گواهی‌نامه‌ها از الگوی <b dir="ltr">YYYYMM-xxxxx</b> پیروی می‌کند (سال و ماهِ صدور + شمارهٔ سریال). برای استعلام، وارد کردن هر یک از سه حالت زیر کافی است:
+    </p>
+    <ul class="cert-help-list">
+      <li><span class="ch-dot" style="background:#e53935"></span> حالت ۱ — کد کامل <b dir="ltr">YYYYMM-xxxxx</b> با خط تیره</li>
+      <li><span class="ch-dot" style="background:#e0a800"></span> حالت ۲ — کد کامل <b dir="ltr">YYYYMMxxxxx</b> بدون خط تیره</li>
+      <li><span class="ch-dot" style="background:#43a047"></span> حالت ۳ — فقط شمارهٔ سریال <b dir="ltr">xxxxx</b> (بدون YYYYMM)</li>
+    </ul>
+    <div class="cert-help-img">
+      <img src="assets/cert-example.png" alt="نمونهٔ سه حالت جست‌وجو در کد گواهی‌نامه" loading="lazy">
+    </div>
+    <p class="muted" style="font-size:.78rem;line-height:2;margin-top:12px">
+      <i data-lucide="history"></i> تعداد حروف یا اعداد سریال گواهی ممکن است 4،5 یا 6 رقمی باشد. اگر چند گواهی با یک سریال پیدا شود، فهرست آن‌ها نمایش داده می‌شود تا دقیق‌تر انتخاب کنید.
+    </p>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalTgConnect">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="send"></i> اتصال با تلگرام</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <p class="muted" style="margin-bottom:10px">با اتصال حساب، این مزایا فعال می‌شود:</p>
+    <ul class="benefits card-like">
+      <li><i data-lucide="megaphone"></i> دریافت اطلاعیه‌های اعضا</li>
+      <li><i data-lucide="award"></i> اطلاعیه صدور گواهینامه برای شما</li>
+      <li><i data-lucide="rocket"></i> اطلاعیه آغاز ثبت‌نام کارگاه جدید</li>
+      <li><i data-lucide="link"></i> ارسال خودکار لینک کارگاه بعد از ثبت‌نام</li>
+    </ul>
+    <div id="tgConnectSteps"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalProfileEdit">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="user-pen"></i> ویرایش پروفایل</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <form id="profileEditForm" class="form">
+      <div class="form-row">
+        <label>نام<input name="first_name" data-name="fa" required></label>
+        <label>نام خانوادگی<input name="last_name" data-name="fa" required></label>
+      </div>
+      <label>کد ملی<input name="national_id" inputmode="numeric" maxlength="10" required></label>
+      <label>شماره دانشجویی<input name="student_id" inputmode="numeric" required></label>
+      <label>شماره موبایل<input name="phone" inputmode="tel" required></label>
+      <button class="btn btn-primary" type="submit">ذخیره</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalForgot">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="key-round"></i> بازیابی رمز عبور</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <p class="muted" style="margin-bottom:10px">لینک بازیابی از طریق ربات تلگرام برای شما ارسال می‌شود (حساب باید به تلگرام متصل باشد).</p>
+    <form id="forgotForm" class="form">
+      <label>شماره موبایل<input name="phone" inputmode="tel" required placeholder="۰۹xxxxxxxxx"></label>
+      <button class="btn btn-primary" type="submit">ارسال لینک</button>
+    </form>
+    <div id="resetBox" class="hidden">
+      <form id="resetForm" class="form">
+        <label>رمز عبور جدید<input name="password" type="password" required minlength="8"></label>
+        <button class="btn btn-primary" type="submit">تغییر رمز</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalTgWait">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <h3><i data-lucide="send"></i> ورود سریع با تلگرام</h3>
+    </div>
+    <p class="muted" style="line-height:2;margin-bottom:6px">در ربات تلگرام، دکمهٔ «📱 ارسال شماره تلفن و ورود به سایت» را بزنید تا ورود شما بر اساس شماره تماس تأیید شود.</p>
+    <div class="tg-wl-count" id="tgWlCount" dir="ltr">60</div>
+    <p class="tg-wl-msg muted" id="tgWlMsg">در انتظار پاسخ از تلگرام…</p>
+    <button class="btn btn-outline" style="width:100%;margin-top:12px" type="button" id="tgWlCancel"><i data-lucide="x"></i> لغو</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalAbout">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="info"></i> درباره انجمن</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="about-block">
+      <p class="about-text">انجمن علمی مهندسی برق علوم و تحقیقات (SSAEE) با هدف ارتقای سطح علمی، برگزاری کارگاه‌ها و دوره‌های تخصصی، و ایجاد پل ارتباطی میان دانشجویان، اساتید و صنعت فعالیت می‌کند.</p>
+    </div>
+
+    <h4 class="about-sub"><i data-lucide="share-2"></i> شبکه‌های اجتماعی انجمن</h4>
+    <div class="about-social">
+      <a class="social-row" href="https://t.me/srbiausaee" target="_blank" rel="noopener"><i data-lucide="send"></i> تلگرام</a>
+      <a class="social-row" href="https://ble.ir/mhdr_shpr" target="_blank" rel="noopener"><i data-lucide="message-square"></i> بله (Ble)</a>
+      <a class="social-row" href="https://instagram.com/srbiaussaee" target="_blank" rel="noopener"><i data-lucide="instagram"></i> اینستاگرام</a>
+      <a class="social-row" href="https://linkedin.com/company/srbiausaee" target="_blank" rel="noopener"><i data-lucide="linkedin"></i> لینکدین</a>
+    </div>
+
+    <h4 class="about-sub"><i data-lucide="users-round"></i> اعضای هیئت مدیره</h4>
+    <button class="btn btn-outline" style="width:100%" type="button" data-modal="modalBoard"><i data-lucide="presentation"></i> مشاهده اعضای هیئت مدیره</button>
+    <div class="dev-credit">Developed By <b>MAHDYAR SHAHPARI</b></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBoard">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3><i data-lucide="users-round"></i> هیئت مدیره انجمن</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+
+    <div id="boardTerms" class="board-terms"></div>
+
+    <div id="boardSlider" class="board-slider">
+      <div class="loading">در حال بارگذاری…</div>
+    </div>
+    <div id="boardDots" class="board-dots"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<!-- ===== Account deletion: step 1 confirm ===== -->
+<div class="modal-bg" id="modalAcctDelete">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="shield-alert"></i> حذف حساب کاربری سایت</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <div class="del-info">
+      <div class="del-row ok"><i data-lucide="check"></i> حذف خواهد شد: حساب کاربری وب‌سایت و نشست‌های ورود شما</div>
+      <div class="del-row keep"><i data-lucide="shield"></i> محفوظ می‌ماند: گواهینامه‌ها، سوابق ثبت‌نام کارگاه‌ها، اطلاعات عضویت و امتیازها</div>
+    </div>
+    <p class="muted" style="font-size:.78rem;line-height:1.9;margin:12px 0">برای تأیید، یک کد به ربات تلگرام ارسال می‌شود. اگر بعداً خواستید اطلاعات بالا (گواهینامه/عضویت و…) هم حذف شود، باید به پشتیبانی پیام دهید.</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="acctDelSendCode" type="button"><i data-lucide="send"></i> ارسال کد تأیید به تلگرام</button>
+      <button class="btn btn-outline" type="button" data-close>انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Account deletion: step 2 code ===== -->
+<div class="modal-bg" id="modalAcctDeleteCode">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i data-lucide="key-round"></i> کد تأیید حذف حساب</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <p class="muted" style="font-size:.8rem;margin-bottom:12px">کد ۶ رقمی ارسال‌شده به ربات تلگرام را وارد کنید (۵ دقیقه اعتبار).</p>
+    <form id="acctDelCodeForm" class="form">
+      <label>کد تأیید<input name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required style="direction:ltr;text-align:center;letter-spacing:6px;font-size:1.1rem"></label>
+      <div class="modal-actions">
+        <button class="btn btn-danger" type="submit"><i data-lucide="trash-2"></i> حذف قطعی حساب من</button>
+        <button class="btn btn-outline" type="button" data-close>انصراف</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Workshop registration success (auto-join countdown) ===== -->
+<div class="modal-bg" id="modalWsJoined">
+  <div class="modal ws-joined-modal">
+    <div class="ws-joined-icon"><i data-lucide="check-circle-2"></i></div>
+    <h3 class="ws-joined-title">ثبت‌نام شما انجام شد! 🎉</h3>
+    <p class="muted" id="wsJoinedTitle" style="font-size:.85rem"></p>
+    <div class="reg-success-id" style="margin:10px 0">🆔 کد ثبت‌نام: <code id="wsJoinedRegId"></code></div>
+        <div id="wsJoinedLinkWrap" class="ws-joined-link-wrap">
+      <p class="muted" style="font-size:.78rem;line-height:1.9">یا با زدن دکمه‌ی زیر وارد گروه شوید، یا لینک آن را در چت خود با ربات مشاهده کنید.</p>
+      <a class="btn btn-primary ws-joined-btn" id="wsJoinedLink" href="#" target="_blank" rel="noopener" style="margin-top:8px">
+        <i data-lucide="send"></i> ورود به گروه
+      </a>
+    </div>
+    <div id="wsJoinedNoLink" class="muted hidden" style="font-size:.8rem;margin-top:8px">لینک گروه هنوز صادر نشده است؛ پس از ارسال، در چت ربات در اختیارتان قرار می‌گیرد.</div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-outline" type="button" data-close>بستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Help guide (section-by-section — content managed in admin panel) ===== -->
+<div class="modal-bg" id="modalHelp">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3><i data-lucide="circle-help"></i> راهنمای پنل</h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+
+    <p class="muted" style="font-size:.78rem;margin-bottom:10px">هر بخش را باز کنید تا توضیح آن را ببینید.</p>
+
+    <div class="help-list" id="helpList">
+      <div class="loading">در حال بارگذاری…</div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js?v=16"></script>
+
+</body>
+</html>

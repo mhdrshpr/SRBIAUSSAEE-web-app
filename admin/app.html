@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<title>پنل مدیریت SSAEE</title>
+<link rel='icon' type='image/svg+xml' href='../assets/favicon.svg'>
+<link rel='shortcut icon' href='../assets/favicon.ico'>
+<link rel='stylesheet' href='assets/admin.css?v=12'>
+<!-- vendored locally: no CDN dependency, icons always load -->
+<script src="assets/vendor/lucide.min.js" defer></script>
+<script src="assets/vendor/chart.umd.min.js" defer></script>
+</head>
+<body>
+
+<!-- ==================== LOGIN SHELL (shown pre-auth) ==================== -->
+<div id="loginShell" style="display:none">
+  <div class="login-wrap">
+    <!-- animated pattern background (pure CSS, GPU-friendly) -->
+    <div class="login-bg" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="bg-rays"></div>
+      <div class="bg-sweep"></div>
+      <div class="bg-nodes">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-icon"><i data-lucide="shield-check"></i></div>
+      <h1 class="login-title">پنل مدیریت</h1>
+      <p class="login-sub">انجمن علمی مهندسی برق — SSAEE</p>
+
+      <form id="loginStep1" novalidate>
+        <div class="fg">
+          <label for="lgUser">نام کاربری</label>
+          <div class="input-wrap">
+            <i data-lucide="user" class="input-icon"></i>
+            <input id="lgUser" autocomplete="username" required>
+          </div>
+        </div>
+        <div class="fg">
+          <label for="lgPass">رمز عبور
+            <span class="tip" tabindex="0" data-tip="برای بازیابی رمز عبور به پشتیبانی پیام دهید: t.me/saee_admin">
+              <i data-lucide="circle-help"></i>
+            </span>
+          </label>
+          <div class="input-wrap">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input id="lgPass" type="password" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" id="pwToggle" aria-label="نمایش/مخفی کردن رمز" aria-pressed="false">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="lgBtn" type="submit">
+          <span class="btn-label">ورود</span>
+        </button>
+      </form>
+
+      <form id="loginStep2" hidden novalidate>
+        <div class="otp-notice"><i data-lucide="send"></i> کد یکبارمصرف به تلگرام شما ارسال شد</div>
+        <div class="otp-wrap">
+          <label class="otp-label" for="otp0">کد تأیید ۶ رقمی</label>
+          <div class="otp-card-group" id="otpCardGroup" dir="ltr">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp0" data-index="0" autocomplete="one-time-code" required>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp1" data-index="1">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp2" data-index="2">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp3" data-index="3">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp4" data-index="4">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp5" data-index="5">
+          </div>
+          <input type="hidden" id="lgCode" name="code">
+        </div>
+        <button class="btn btn-primary btn-block" id="lg2faBtn" type="submit">
+          <span class="btn-label">تأیید</span>
+        </button>
+      </form>
+
+      <button class="icon-btn login-theme" id="loginThemeBtn" type="button" title="تغییر تم" aria-label="تغییر تم"></button>
+    </div>
+  </div>
+</div>
+
+<div class="layout" id="appRoot" style="display:none">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <img data-logo-dark="../assets/logo.png" data-logo-light="../assets/logo-black.png" src="../assets/logo.png" alt="SSAEE" onerror="this.remove()">
+    </div>
+    <nav class="side-nav" id="sideNav"></nav>
+    <div class="side-credit">Dev By <b>MAHDYAR SHAHPARI</b></div>
+    <div class="side-user" id="sideUser"></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="burger" id="burger" type="button"><i data-lucide="menu"></i></button>
+      <button class="icon-btn" id="sideCollapse" type="button" title="جمع/باز کردن منو"><i data-lucide="panel-right-close"></i></button>
+      <h1 id="pageTitle">پنل مدیریت</h1>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </header>
+    <div class="content" id="content">
+      <div id="bootLoader">
+        <div class="skel-stats">
+          <div class="skeleton skel-stat"></div>
+          <div class="skeleton skel-stat"></div>
+          <div class="skeleton skel-stat"></div>
+          <div class="skeleton skel-stat"></div>
+        </div>
+        <div class="skel-rows">
+          <div class="skel-row"><div class="skeleton skel-av"></div><div class="skel-lines"><div class="skeleton skel-line w60"></div><div class="skeleton skel-line w40"></div></div></div>
+          <div class="skel-row"><div class="skeleton skel-av"></div><div class="skel-lines"><div class="skeleton skel-line w60"></div><div class="skeleton skel-line w40"></div></div></div>
+          <div class="skel-row"><div class="skeleton skel-av"></div><div class="skel-lines"><div class="skeleton skel-line w60"></div><div class="skeleton skel-line w40"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- modal root -->
+<div class="modal-bg" id="formModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="formModalTitle"></h3>
+      <button class="icon-btn" data-close type="button"><i data-lucide="x"></i></button>
+    </div>
+    <form id="entityForm" class="form-grid"></form>
+  </div>
+</div>
+
+<script>__ADMIN_BOOT__</script>
+<script src="assets/admin.js?v=34"></script>
+</body>
+</html>

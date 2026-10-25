@@ -1,0 +1,7 @@
+# === Admin panel ===
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^api/([a-z_]+)$ index.php?api=$1 [L,QSA]
+</IfModule>

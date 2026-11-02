@@ -14,6 +14,11 @@ def test_removed_files():
         'appbeta.html',
         'includes/bootstrap_backup.php',
         'v2.zip',
+        'Gemini code/diag.php',
+        'Gemini code/promote.php',
+        'Gemini code/appbeta.html',
+        'Gemini code/includes/bootstrap_backup.php',
+        'Gemini code/v2.zip',
     ]
     for path in forbidden:
         assert not os.path.exists(path), f"Security risk: {path} should not exist!"
@@ -125,6 +130,51 @@ def test_robots_and_sitemap():
 
     print("[OK] PASS: robots.txt and sitemap.xml verified and well-formed.")
 
+def test_mirror_parity():
+    if not os.path.exists('Gemini code'):
+        print("[OK] PASS: Standalone repository environment (Gemini code mirror not present).")
+        return
+    files_to_check = [
+        'app.html',
+        'robots.txt',
+        'sitemap.xml',
+        '.htaccess',
+        'assets/app.css',
+        'assets/app.js',
+        'admin/app.html',
+        'admin/assets/admin.css',
+        'admin/assets/admin.js',
+        'includes/admin.php',
+        'includes/site.php',
+    ]
+    for rel_path in files_to_check:
+        root_file = rel_path
+        mirror_file = os.path.join('Gemini code', rel_path)
+        assert os.path.exists(root_file), f"Missing root file: {root_file}"
+        assert os.path.exists(mirror_file), f"Missing mirror file: {mirror_file}"
+        with open(root_file, 'rb') as f1, open(mirror_file, 'rb') as f2:
+            data1 = f1.read()
+            data2 = f2.read()
+            assert data1 == data2, f"Byte-for-byte mismatch between {root_file} and {mirror_file}!"
+    print(f"[OK] PASS: All {len(files_to_check)} files are 100% byte-for-byte identical with Gemini code/ mirror.")
+
+def test_floating_navbars():
+    with open('assets/app.css', 'r', encoding='utf-8') as f:
+        app_css = f.read()
+    assert 'bottom: calc(14px + env(safe-area-inset-bottom, 0px));' in app_css, 'app.css tabbar floating bottom missing'
+    assert 'border-radius: var(--radius);' in app_css, 'app.css tabbar rounded corners missing'
+
+    with open('admin/assets/admin.css', 'r', encoding='utf-8') as f:
+        admin_css = f.read()
+    assert '.admin-tabbar' in admin_css, 'admin.css tabbar missing'
+    assert 'bottom: calc(14px + env(safe-area-inset-bottom, 0px));' in admin_css, 'admin.css tabbar floating bottom missing'
+
+    with open('admin/app.html', 'r', encoding='utf-8') as f:
+        admin_html = f.read()
+    assert 'id="adminTabbar"' in admin_html, 'admin.html tabbar missing'
+
+    print("[OK] PASS: Floating bottom navbars verified in app and admin.")
+
 if __name__ == '__main__':
     print("=" * 60)
     print("SSAEE AUDIT VERIFICATION TEST HARNESS")
@@ -136,6 +186,8 @@ if __name__ == '__main__':
     test_js_escaping()
     test_html_validity_and_seo()
     test_robots_and_sitemap()
+    test_mirror_parity()
+    test_floating_navbars()
     print("=" * 60)
     print("ALL VERIFICATION TESTS PASSED SUCCESSFULLY! (100% GREEN)")
     print("=" * 60)

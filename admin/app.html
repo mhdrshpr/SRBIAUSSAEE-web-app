@@ -63,17 +63,12 @@
 
       <form id="loginStep2" hidden novalidate>
         <div class="otp-notice"><i data-lucide="send"></i> کد یکبارمصرف به تلگرام شما ارسال شد</div>
-        <div class="otp-wrap">
-          <label class="otp-label" for="otp0">کد تأیید ۶ رقمی</label>
-          <div class="otp-card-group" id="otpCardGroup" dir="ltr">
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp0" data-index="0" autocomplete="one-time-code" required>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp1" data-index="1">
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp2" data-index="2">
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp3" data-index="3">
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp4" data-index="4">
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-digit" id="otp5" data-index="5">
+        <div class="fg">
+          <label for="lgCode">کد تأیید</label>
+          <div class="input-wrap">
+            <i data-lucide="key-round" class="input-icon"></i>
+            <input id="lgCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
           </div>
-          <input type="hidden" id="lgCode" name="code">
         </div>
         <button class="btn btn-primary btn-block" id="lg2faBtn" type="submit">
           <span class="btn-label">تأیید</span>
@@ -99,7 +94,7 @@
   <main class="main">
     <header class="topbar">
       <button class="burger" id="burger" type="button"><i data-lucide="menu"></i></button>
-      <button class="icon-btn" id="sideCollapse" type="button" title="جمع/باز کردن منو"><i data-lucide="panel-right-close"></i></button>
+      <button class="icon-btn" id="sideCollapse" type="button" title="جمع/باز کردن منو" style="display:none"><i data-lucide="panel-right-close"></i></button>
       <h1 id="pageTitle">پنل مدیریت</h1>
       <div class="topbar-actions" id="topbarActions"></div>
     </header>
@@ -118,6 +113,14 @@
         </div>
       </div>
     </div>
+
+    <nav class="admin-tabbar" id="adminTabbar">
+      <button class="tab active" data-section="dashboard" type="button"><i data-lucide="layout-dashboard"></i><span>داشبورد</span></button>
+      <button class="tab" data-section="members" type="button"><i data-lucide="id-card"></i><span>اعضا</span></button>
+      <button class="tab" data-section="workshops" type="button"><i data-lucide="rocket"></i><span>کارگاه‌ها</span></button>
+      <button class="tab" data-section="certificates" type="button"><i data-lucide="award"></i><span>گواهی‌ها</span></button>
+      <button class="tab tab-menu" data-action="toggle-sidebar" type="button"><i data-lucide="menu"></i><span>منو</span></button>
+    </nav>
   </main>
 </div>
 

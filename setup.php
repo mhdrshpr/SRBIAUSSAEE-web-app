@@ -57,12 +57,11 @@ if ($adminCount === 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                  VALUES (?, ?, ?, 'superadmin', 1, ?)",
                 [$old['username'], password_hash($password, PASSWORD_DEFAULT), $old['full_name'], $old['telegram_id'] ?: null]
             );
-            $newUserId = db_id();
             db_exec(
                 "INSERT IGNORE INTO user_roles (user_id, role) VALUES (?, 'superadmin')",
-                [$newUserId]
+                [db_id()]
             );
-            audit_log(null, 'create', 'users', (string)$newUserId, ['username' => $old['username'], 'via' => 'setup']);
+            audit_log(null, 'create', 'users', (string)db_id(), ['username' => $old['username'], 'via' => 'setup']);
             $success = true;
         }
     }

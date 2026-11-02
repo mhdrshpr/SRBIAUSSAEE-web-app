@@ -590,6 +590,16 @@
       btn.addEventListener('click', () => openSection(btn.dataset.section));
     });
 
+    $$('#adminTabbar .tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.action === 'toggle-sidebar') {
+          $('#sidebar').classList.toggle('open');
+        } else if (btn.dataset.section) {
+          openSection(btn.dataset.section);
+        }
+      });
+    });
+
     openSection('dashboard');
     syncThemeIcon();
   }
@@ -605,6 +615,7 @@
     state.search = '';
 
     $$('#sideNav .side-link').forEach(b => b.classList.toggle('active', b.dataset.section === key));
+    $$('#adminTabbar .tab').forEach(b => b.classList.toggle('active', b.dataset.section === key));
     openSectionGroup(key);
     $('#sidebar').classList.remove('open');
 

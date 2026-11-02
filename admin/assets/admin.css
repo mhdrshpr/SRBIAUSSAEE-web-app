@@ -140,7 +140,7 @@ body.light .side-link.active { background: rgba(184,134,11,.13); }
 .topbar h1 { font-size: 1.05rem; flex: 1; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 .burger { display: none; background: none; border: none; color: var(--text); font-size: 1.2rem; cursor: pointer; }
-.content { padding: 22px; }
+.content { padding: 22px; padding-bottom: 96px; }
 
 /* ---------- Alerts / Loading ---------- */
 .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: .88rem; }
@@ -428,46 +428,93 @@ body.light .badge-yellow { background: rgba(184,134,11,.15); color: #9a6f08; }
 }
 
 /* ---------- Toast ---------- */
-#adminToast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg-3); color: var(--text); border: 1px solid var(--accent); padding: 12px 20px; border-radius: 12px; font-size: .85rem; z-index: 500; max-width: 88%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+#adminToast { display: none; position: fixed; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--bg-3); color: var(--text); border: 1px solid var(--accent); padding: 12px 20px; border-radius: 12px; font-size: .85rem; z-index: 500; max-width: 88%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+
+/* ---------- Admin Floating Bottom Tabbar ---------- */
+.admin-tabbar {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 14px;
+  right: calc(240px + 14px);
+  margin: 0 auto;
+  max-width: 500px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: color-mix(in srgb, var(--bg-2) 90%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 6px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform .25s ease, background .3s, border-color .3s, right .25s ease;
+}
+
+body.side-collapsed .admin-tabbar {
+  right: calc(64px + 14px);
+}
+
+@media (max-width: 900px) {
+  .admin-tabbar {
+    right: 14px;
+    left: 14px;
+  }
+}
+
+.admin-tabbar .tab {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: .7rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  transition: color .2s, background .2s, transform .15s;
+  min-width: 54px;
+}
+
+.admin-tabbar .tab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.admin-tabbar .tab:active {
+  transform: scale(.94);
+}
+
+.admin-tabbar .tab i,
+.admin-tabbar .tab svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform .2s ease;
+}
+
+.admin-tabbar .tab.active {
+  color: var(--accent);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.admin-tabbar .tab.active i,
+.admin-tabbar .tab.active svg {
+  transform: translateY(-1px);
+}
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-  /* Mobile: sidebar turns into a floating horizontal card below topbar, expanding vertically */
-  .sidebar {
-    position: fixed;
-    top: 60px;
-    right: 12px;
-    left: 12px;
-    width: auto !important;
-    bottom: auto;
-    max-height: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-8px);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    box-shadow: 0 16px 40px rgba(0,0,0,.5);
-    background: var(--bg-2);
-    overflow: hidden;
-    transition: max-height .35s cubic-bezier(0.4, 0, 0.2, 1), opacity .25s ease, transform .25s ease;
-    z-index: 100;
-  }
-  .sidebar.open {
-    max-height: calc(85vh - 70px);
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-    overflow-y: auto;
-  }
-  .sidebar .side-brand,
-  .sidebar .side-credit {
-    display: none;
-  }
-  .main { margin-right: 0 !important; }
-  .burger { display: inline-flex; align-items: center; justify-content: center; }
-  #sideCollapse { display: none !important; }
+  .sidebar { transform: translateX(100%); }
+  .sidebar.open { transform: translateX(0); box-shadow: -10px 0 40px rgba(0,0,0,.5); }
+  .main { margin-right: 0; }
+  .burger { display: block; }
   .form-grid { grid-template-columns: 1fr; }
-  .content { padding: 14px; }
+  .content { padding: 14px; padding-bottom: 96px; }
   .charts-grid { grid-template-columns: 1fr; }
   .topbar { padding: 12px 14px; flex-wrap: wrap; }
   .topbar h1 { font-size: .95rem; }
@@ -768,209 +815,3 @@ body.light .cm-box{background:rgba(200,150,0,.10)}
 .card-x{flex:none;width:24px;height:24px;border-radius:8px;border:1px solid var(--danger);background:transparent;color:var(--danger);cursor:pointer;font-size:12px;line-height:1}
 .card-x:hover{background:var(--danger);color:#fff}
 body.light .cm-x{background:#fff}
-
-/* ---------- 2FA 6-Card OTP Modern Design ---------- */
-.otp-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-  width: 100%;
-}
-.otp-label {
-  display: block;
-  font-size: .84rem;
-  color: var(--muted);
-  margin-bottom: 14px;
-  text-align: center;
-  font-weight: 500;
-}
-.otp-card-group {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: 8px !important;
-  width: 100% !important;
-  max-width: 320px !important;
-  margin: 0 auto !important;
-  direction: ltr !important;
-}
-.otp-digit {
-  box-sizing: border-box !important;
-  width: 42px !important;
-  height: 50px !important;
-  flex: 0 0 42px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  text-align: center !important;
-  font-size: 1.45rem !important;
-  font-weight: 700 !important;
-  line-height: 50px !important;
-  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
-  color: var(--text) !important;
-  background: var(--bg-1, #0f1015) !important;
-  border: 2px solid var(--border) !important;
-  border-radius: 12px !important;
-  outline: none !important;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.18) !important;
-  transition: border-color .18s ease, box-shadow .18s ease, transform .15s ease, background-color .18s ease !important;
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-}
-.otp-digit::-webkit-outer-spin-button,
-.otp-digit::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.otp-digit:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent), inset 0 1px 2px rgba(0,0,0,0.1) !important;
-  transform: translateY(-2px);
-  background: var(--bg-2) !important;
-}
-.otp-digit.filled {
-  border-color: color-mix(in srgb, var(--accent) 70%, var(--border)) !important;
-}
-.otp-digit:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-}
-
-/* Red Error animation */
-.otp-card-group.anim-error {
-  animation: otpShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
-}
-.otp-card-group.anim-error .otp-digit {
-  border-color: #ff4d4f !important;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.35), 0 0 12px rgba(255, 77, 79, 0.5) !important;
-  color: #ff4d4f !important;
-  background: rgba(255, 77, 79, 0.08) !important;
-}
-
-/* Green Success animation */
-.otp-card-group.anim-success {
-  animation: otpSuccessPop 0.5s ease-out both;
-}
-.otp-card-group.anim-success .otp-digit {
-  border-color: #52c41a !important;
-  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.35), 0 0 14px rgba(82, 196, 26, 0.55) !important;
-  color: #52c41a !important;
-  background: rgba(82, 196, 26, 0.08) !important;
-}
-
-@keyframes otpShake {
-  10%, 90% { transform: translate3d(-3px, 0, 0); }
-  20%, 80% { transform: translate3d(5px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-  40%, 60% { transform: translate3d(6px, 0, 0); }
-}
-
-@keyframes otpSuccessPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-@media (max-width: 380px) {
-  .otp-card-group {
-    gap: 5px !important;
-  }
-  .otp-digit {
-    width: 36px !important;
-    height: 44px !important;
-    line-height: 44px !important;
-    flex: 0 0 36px !important;
-    font-size: 1.25rem !important;
-    border-radius: 9px !important;
-  }
-}
-
-/* ---------- Certificate Auto-complete Suggestion Card ---------- */
-.cert-suggest-card {
-  background: var(--bg-3);
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  animation: fadeInDown 0.25s ease;
-}
-.cert-suggest-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-.cert-suggest-close {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-}
-.cert-suggest-close:hover {
-  background: var(--bg-2);
-  color: var(--text);
-}
-.cert-suggest-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 190px;
-  overflow-y: auto;
-}
-.cert-suggest-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.82rem;
-  text-align: right;
-  width: 100%;
-  color: var(--text);
-  font-family: inherit;
-}
-.cert-suggest-item:hover {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-2));
-  transform: translateX(-2px);
-}
-.cert-suggest-item .cs-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.cert-suggest-item .cs-name {
-  font-weight: 700;
-  color: var(--text);
-}
-.cert-suggest-item .cs-meta {
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-.cert-suggest-item .cs-badge {
-  font-size: 0.68rem;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--bg-3);
-  color: var(--accent);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-}
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}

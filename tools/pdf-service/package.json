@@ -1,0 +1,13 @@
+{
+  "name": "ssaee-pdf-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remote headless-Chromium PDF renderer for SSAEE certificates (HTML in → PDF out).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
+  }
+}

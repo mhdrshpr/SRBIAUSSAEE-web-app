@@ -30,7 +30,6 @@ if ($confirm && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Register bot commands menu (visible in Telegram UI)
         if ($done) {
-            $appUrl = rtrim((string)Env::get('APP_URL', ''), '/');
             botmgr_api('setMyCommands', ['commands' => json_encode([
                 ['command' => 'start',   'description' => '🚀 شروع ربات'],
                 ['command' => 'panel',   'description' => '🚀 باز کردن پنل'],
